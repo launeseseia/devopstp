@@ -1,4 +1,2 @@
-![CI](https://github.com/
- <org>/<repo>/actions/
- workflows/ci.yml/badge.svg)
+![CI](https://github.com/launeseseia/devopstp/actions/workflows/ci.yml/badge.svg)
 
