@@ -1,15 +1,24 @@
 name: CI
+
 on: [push, pull_request]
 jobs:
- test:
- steps:
-   - name: Récupérer le code
-     uses: actions/checkout@v4
-   - name: Installer Python
-     uses: actions/setup-python@v5
-     with:
-       python-version: "3.14.4"
-   - name: Installer les dépendances
-     run: pip install -r requirements.txt
-   - name: Lancer les tests
-     run: pytest starter-app/
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.4'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt; fi
+
+      - name: Run linter (flake8)
+        run: flake8 . --max-line-length=100 --exclude=.venv
+
+      - name: Run tests (pytest)
+        run: pytest -v
