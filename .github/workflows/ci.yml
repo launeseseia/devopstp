@@ -93,7 +93,7 @@ jobs:
 
         - uses: docker/build-push-action@v5
           with:
-            context: ./starter-app
+            context: .
             push: true
             tags: |
               ghcr.io/${{ github.repository }}:${{ github.sha }}
