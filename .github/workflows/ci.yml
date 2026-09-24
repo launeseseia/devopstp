@@ -98,3 +98,21 @@ jobs:
             tags: |
               ghcr.io/${{ github.repository }}:${{ github.sha }}
               ghcr.io/${{ github.repository }}:latest
+  
+  deploy:
+      name: Deploy to Production
+      needs: build-and-push
+      runs-on: ubuntu-latest
+      environment: production
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Run deployment script
+          run: |
+            chmod +x deploy/deploy.sh
+            ./deploy/deploy.sh
+
+        - name: Smoke test production traffic
+          run: |
+            curl --fail http://localhost/status || exit 1
