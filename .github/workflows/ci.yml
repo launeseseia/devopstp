@@ -113,7 +113,7 @@ jobs:
             chmod +x deploy/deploy.sh
             ./deploy/deploy.sh
           env:
-            COMPOSE_FILE: starter-app:docker-compose.yml
+            COMPOSE_FILE: docker-compose.yml
 
         - name: Smoke test production traffic
           run: |
