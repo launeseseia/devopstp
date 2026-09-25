@@ -114,13 +114,7 @@ jobs:
             ./deploy/deploy.sh
           env:
             COMPOSE_FILE: docker-compose.yml
-
+            COMMIT_SHA: ${{ github.sha }}
         - name: Smoke test production traffic
           run: |
             curl --fail http://localhost/status || exit 1
-        - name: Run deployment script
-          run: |
-            chmod +x deploy/deploy.sh
-            ./deploy/deploy.sh
-          env:
-          COMMIT_SHA: ${{ github.sha }}
