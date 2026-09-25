@@ -47,7 +47,7 @@ def status():
         "service": "starter-app",
         "version": "1.0",
         "deploy_color": DEPLOY_COLOR,
-        "commit_sha": COMMIT_SHA
+        "commit_sha": COMMIT_SHA,
     }), 200
 
 
