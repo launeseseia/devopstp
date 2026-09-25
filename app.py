@@ -58,13 +58,5 @@ def visits():
     return jsonify(visits=count), 200
 
 
-@app.route("/")
-def index():
-    return jsonify(
-        status="ok",
-        message="V2 en production via CI/CD Blue-Green !"
-    ), 200
-
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
