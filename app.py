@@ -43,7 +43,7 @@ DEPLOY_COLOR = os.getenv("DEPLOY_COLOR", "unknown")
 def status():
     return (
         jsonify(
-            service="starter-app",
+            service="projet-devops-groupe-demo",
             version="1.0",
             deploy_color=DEPLOY_COLOR,
         ),
