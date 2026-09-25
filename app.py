@@ -36,19 +36,18 @@ def health():
         return jsonify(status="error", error=str(e)), 503
 
 
-DEPLOY_COLOR = os.getenv("DEPLOY_COLOR", "unknown")
-
+COMMIT_SHA = os.environ.get("COMMIT_SHA", "unknown")
+DEPLOY_COLOR = os.environ.get("DEPLOY_COLOR", "unknown")
 
 @app.route("/status")
 def status():
-    return (
-        jsonify(
-            service="projet-devops-groupe-demo",
-            version="1.0",
-            deploy_color=DEPLOY_COLOR,
-        ),
-        200,
-    )
+    return jsonify({
+        "status": "ok",
+        "service": "starter-app",
+        "version": "1.0",
+        "deploy_color": DEPLOY_COLOR,
+        "commit_sha": COMMIT_SHA
+    }), 200
 
 
 @app.route("/visits")

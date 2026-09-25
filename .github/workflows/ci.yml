@@ -118,3 +118,9 @@ jobs:
         - name: Smoke test production traffic
           run: |
             curl --fail http://localhost/status || exit 1
+        - name: Run deployment script
+          run: |
+            chmod +x deploy/deploy.sh
+            ./deploy/deploy.sh
+          env:
+          COMMIT_SHA: ${{ github.sha }}

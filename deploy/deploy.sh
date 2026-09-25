@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 1. Résolution des chemins relatif au script
+# 1. Résolution des chemins relatifs au script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
@@ -64,6 +64,20 @@ if [ "$STATUS_COLOR" != "$IDLE" ]; then
     echo "ROLLBACK : arrêt de app-${IDLE}, ${ACTIVE} reste actif"
     docker compose --profile "$IDLE" stop "app-${IDLE}"
     exit 1
+fi
+
+# Vérification du commit SHA
+EXPECTED_SHA="${COMMIT_SHA:-}"
+if [ -n "$EXPECTED_SHA" ]; then
+    DEPLOYED_SHA=$(curl -sf "http://127.0.0.1:${PORT}/status" | python3 -c "import sys, json; print(json.load(sys.stdin).get('commit_sha', ''))" 2>/dev/null || true)
+    
+    echo "Vérification SHA : Attendu='${EXPECTED_SHA}', Reçu='${DEPLOYED_SHA}'"
+    if [ "$DEPLOYED_SHA" != "$EXPECTED_SHA" ]; then
+        echo "ÉCHEC : Incohérence du commit SHA détectée !"
+        echo "ROLLBACK : arrêt de app-${IDLE}, ${ACTIVE} reste actif"
+        docker compose --profile "$IDLE" stop "app-${IDLE}"
+        exit 1
+    fi
 fi
 
 echo "Smoke test validé avec succès !"
