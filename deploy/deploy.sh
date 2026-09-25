@@ -67,7 +67,7 @@ if [ "$STATUS_COLOR" != "$IDLE" ]; then
 fi
 
 # Vérification du commit SHA
-EXPECTED_SHA="${COMMIT_SHA:-}"
+EXPECTED_SHA="bad-sha"
 if [ -n "$EXPECTED_SHA" ]; then
     DEPLOYED_SHA=$(curl -sf "http://127.0.0.1:${PORT}/status" | python3 -c "import sys, json; print(json.load(sys.stdin).get('commit_sha', ''))" 2>/dev/null || true)
     
