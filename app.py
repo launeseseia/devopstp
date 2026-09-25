@@ -39,6 +39,7 @@ def health():
 COMMIT_SHA = os.environ.get("COMMIT_SHA", "unknown")
 DEPLOY_COLOR = os.environ.get("DEPLOY_COLOR", "unknown")
 
+
 @app.route("/status")
 def status():
     return jsonify({
