@@ -1,22 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 1. Résolution des chemins relatifs au script
+# 1. Résolution dynamique des chemins
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+if [ -f "${SCRIPT_DIR}/../docker-compose.yml" ]; then
+    PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+elif [ -f "${SCRIPT_DIR}/../starter-app/docker-compose.yml" ]; then
+    PROJECT_DIR="$(cd "${SCRIPT_DIR}/../starter-app" && pwd)"
+elif [ -f "./docker-compose.yml" ]; then
+    PROJECT_DIR="$(pwd)"
+elif [ -f "./starter-app/docker-compose.yml" ]; then
+    PROJECT_DIR="$(pwd)/starter-app"
+else
+    PROJECT_DIR="$(find "$SCRIPT_DIR/../.." -name "docker-compose.yml" -exec dirname {} \; 2>/dev/null | head -n 1)"
+fi
+
 ACTIVE_FILE="${SCRIPT_DIR}/.active_color"
 NGINX_CONF="${PROJECT_DIR}/nginx/nginx.conf"
 
 cd "$PROJECT_DIR"
+echo "Répertoire de travail : $(pwd)"
 
-# 2. Gestion de l'état initial (pour l'environnement éphémère de la CI)
+# 2. Gestion de l'état initial (CI éphémère)
 if [ ! -f "$ACTIVE_FILE" ]; then
     echo "blue" > "$ACTIVE_FILE"
 fi
 
 ACTIVE=$(cat "$ACTIVE_FILE")
 
-# Définition de la cible IDLE et de son port dédié
 if [ "$ACTIVE" = "blue" ]; then
     IDLE="green"
     PORT=5002
@@ -27,7 +39,7 @@ fi
 
 echo "Déploiement en cours : ACTIVE=${ACTIVE}, IDLE=${IDLE} (port ${PORT})"
 
-# Si Nginx ne tourne pas encore (première exécution sur la machine CI), on démarre la base
+# Si Nginx ne tourne pas encore, démarrer l'infrastructure
 if ! docker ps --format '{{.Names}}' | grep -q "nginx-proxy"; then
     echo "Démarrage initial de l'infrastructure..."
     docker compose --profile "$ACTIVE" up -d
