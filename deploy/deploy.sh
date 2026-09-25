@@ -1,26 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 1. Résolution dynamique des chemins
+# 1. Détection automatique et robuste du dossier contenant docker-compose.yml
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -f "${SCRIPT_DIR}/../docker-compose.yml" ]; then
-    PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+if [ -f "./starter-app/docker-compose.yml" ]; then
+    PROJECT_DIR="$(pwd)/starter-app"
 elif [ -f "${SCRIPT_DIR}/../starter-app/docker-compose.yml" ]; then
     PROJECT_DIR="$(cd "${SCRIPT_DIR}/../starter-app" && pwd)"
+elif [ -f "${SCRIPT_DIR}/../docker-compose.yml" ]; then
+    PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 elif [ -f "./docker-compose.yml" ]; then
     PROJECT_DIR="$(pwd)"
-elif [ -f "./starter-app/docker-compose.yml" ]; then
-    PROJECT_DIR="$(pwd)/starter-app"
 else
-    PROJECT_DIR="$(find "$SCRIPT_DIR/../.." -name "docker-compose.yml" -exec dirname {} \; 2>/dev/null | head -n 1)"
+    # Recherche recursive dans le dépôt si l'arborescence varie
+    COMPOSE_PATH="$(find . -name "docker-compose.yml" 2>/dev/null | head -n 1)"
+    if [ -n "$COMPOSE_PATH" ]; then
+        PROJECT_DIR="$(cd "$(dirname "$COMPOSE_PATH")" && pwd)"
+    else
+        echo "ERREUR : Impossible de localiser docker-compose.yml"
+        exit 1
+    fi
 fi
 
 ACTIVE_FILE="${SCRIPT_DIR}/.active_color"
 NGINX_CONF="${PROJECT_DIR}/nginx/nginx.conf"
 
 cd "$PROJECT_DIR"
-echo "Répertoire de travail : $(pwd)"
+echo "Répertoire effectif : $(pwd)"
 
 # 2. Gestion de l'état initial (CI éphémère)
 if [ ! -f "$ACTIVE_FILE" ]; then
@@ -39,7 +46,7 @@ fi
 
 echo "Déploiement en cours : ACTIVE=${ACTIVE}, IDLE=${IDLE} (port ${PORT})"
 
-# Si Nginx ne tourne pas encore, démarrer l'infrastructure
+# Si Nginx ne tourne pas encore, démarrage initial de la pile
 if ! docker ps --format '{{.Names}}' | grep -q "nginx-proxy"; then
     echo "Démarrage initial de l'infrastructure..."
     docker compose --profile "$ACTIVE" up -d
@@ -67,7 +74,7 @@ if [ "$READY" -ne 1 ]; then
     exit 1
 fi
 
-# Vérification de la couleur renvoyée par /status
+# Smoke test sur /status (vérification de la clé deploy_color)
 STATUS_COLOR=$(curl -sf "http://127.0.0.1:${PORT}/status" | python3 -c "import sys, json; print(json.load(sys.stdin).get('deploy_color', ''))" 2>/dev/null || true)
 
 if [ "$STATUS_COLOR" != "$IDLE" ]; then
@@ -79,7 +86,7 @@ fi
 
 echo "Smoke test validé avec succès !"
 
-# 5. Bascule du trafic Nginx (préservation de l'inode du volume Docker)
+# 5. Bascule du trafic Nginx (préservation de l'inode du volume monté)
 TMP_CONF="$(mktemp)"
 sed "s/server app-${ACTIVE}:5000;/server app-${IDLE}:5000;/" "$NGINX_CONF" > "$TMP_CONF"
 cat "$TMP_CONF" > "$NGINX_CONF"
