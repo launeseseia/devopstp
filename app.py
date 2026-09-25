@@ -28,7 +28,6 @@ def get_redis_client():
 def health():
     try:
         client = get_redis_client()
-        # Test actif de la dependance critique
         if client.ping():
             return jsonify(status="ok", redis="connected"), 200
         else:
@@ -37,9 +36,19 @@ def health():
         return jsonify(status="error", error=str(e)), 503
 
 
+DEPLOY_COLOR = os.getenv("DEPLOY_COLOR", "unknown")
+
+
 @app.route("/status")
 def status():
-    return jsonify(service="projet-devops-groupe-demo", version="1.0"), 200
+    return (
+        jsonify(
+            service="projet-devops-groupe-demo",
+            version="1.0",
+            deploy_color=DEPLOY_COLOR,
+        ),
+        200,
+    )
 
 
 @app.route("/visits")
